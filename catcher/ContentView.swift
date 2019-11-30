@@ -73,6 +73,14 @@ struct ContentView: View {
                 
                 self.checkOutOfBounds(geometry: geometry);
                 
+                var collisions = self.food.filter{ $0.collide(to: self.player) }
+                self.food.removeAll(where: {collisions.contains($0)})
+                self.food.append(contentsOf: collisions.map({ _ in Item.spawn(within: geometry)}))
+                
+                collisions = self.bomb.filter{ $0.collide(to: self.player) }
+                self.bomb.removeAll(where: {collisions.contains($0)})
+                self.bomb.append(contentsOf: collisions.map({ _ in Item.spawn(within: geometry)}))
+                
             })
             .onAppear{
                 self.player.pos = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
@@ -157,7 +165,20 @@ protocol GameElement  {
     
 }
 
-
+extension GameElement {
+    func collide(to : GameElement) -> Bool{
+        let p1 = self.pos
+        let p2 = to.pos
+        let r1 = self.radius
+        let r2 = to.radius
+        
+        // (x2-x1)^2 + (y1-y2)^2 <= (r1+r2)^2
+        let distance = pow(p2.x - p1.x, 2) + pow(p1.y - p2.y, 2)
+        let minDistance = pow(r1+r2, 2)
+        
+        return distance <= minDistance
+    }
+}
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
