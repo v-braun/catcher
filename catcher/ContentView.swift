@@ -7,6 +7,9 @@ struct ContentView: View {
     @State var food = [Item]()
     @State var bomb = [Item]()
     
+    @State var elapsedSec = 0.0
+    @State var lastDate = Date()
+    let updateTimer = Timer.publish(every: 0.05, on: .current, in: .common).autoconnect()
     
     var body: some View {
         GeometryReader { geometry in
@@ -43,7 +46,7 @@ struct ContentView: View {
                     Circle()
                         .frame(width: 20 * 2, height: 20 * 2)
                         .foregroundColor(Color.blue)
-                        .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                        .position(self.player.pos)
                     
                 }
                 .padding()
@@ -51,6 +54,26 @@ struct ContentView: View {
             }
             .background(Color.black)
             .edgesIgnoringSafeArea(.all)
+            .gesture(
+                DragGesture(minimumDistance: 50)
+                    .onEnded { v in
+                        let dX = (v.location.x - v.startLocation.x) * 2
+                        let dY = (v.location.y - v.startLocation.y) * 2
+                        self.player.target.x = self.player.pos.x + dX
+                        self.player.target.y = self.player.pos.y + dY
+                }
+                
+            )
+            .onReceive(self.updateTimer, perform: {_ in
+                let now = Date()
+                self.elapsedSec = Double(now.timeIntervalSince(self.lastDate))
+                self.lastDate = now
+                
+                self.movePlayer()
+                
+                self.checkOutOfBounds(geometry: geometry);
+                
+            })
             .onAppear{
                 self.player.pos = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
                 self.player.target = self.player.pos
@@ -65,6 +88,47 @@ struct ContentView: View {
             }
         }
     }
+    
+    func movePlayer(){
+        let x = Double(self.player.target.x - self.player.pos.x)
+        let y = Double(self.player.target.y - self.player.pos.y)
+        
+        let distance = sqrt((x * x) + (y * y))
+        let angleRad = atan2(y, x)
+        
+        let velocity = distance / 0.5
+        var dX = velocity * cos(angleRad);
+        var dY = velocity * sin(angleRad);
+        
+        dX = self.elapsedSec * dX
+        dY = self.elapsedSec * dY
+        
+        self.player.pos.x += CGFloat(dX)
+        self.player.pos.y += CGFloat(dY)
+        
+    }
+    
+    func checkOutOfBounds(geometry : GeometryProxy){
+        if self.player.pos.x < 0 {
+            self.player.pos.x = geometry.size.width
+            self.player.target.x = geometry.size.width + self.player.target.x
+            
+        } else if self.player.pos.x > geometry.size.width{
+            self.player.pos.x = 0
+            self.player.target.x = self.player.target.x - geometry.size.width
+        }
+        
+        if self.player.pos.y < 0 {
+            self.player.pos.y = geometry.size.height
+            self.player.target.y = geometry.size.height + self.player.target.y
+            
+        } else if self.player.pos.y > geometry.size.height{
+            self.player.pos.y = 0
+            self.player.target.y = self.player.target.y - geometry.size.height
+        }
+        
+    }
+    
 }
 
 struct Player : GameElement{
