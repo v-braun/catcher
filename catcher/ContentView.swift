@@ -9,6 +9,7 @@ struct ContentView: View {
     
     @State var elapsedSec = 0.0
     @State var lastDate = Date()
+    @State var score = 0
     let updateTimer = Timer.publish(every: 0.05, on: .current, in: .common).autoconnect()
     
     var body: some View {
@@ -16,8 +17,8 @@ struct ContentView: View {
             VStack{
                 HStack{
                     Spacer()
-                    Text("\(10)")
-                        .foregroundColor(Color.blue)
+                    Text("\(self.score)")
+                        .foregroundColor(self.score > 0 ? Color.blue : Color.red)
                         .font(.largeTitle)
                     Spacer()
                     
@@ -76,10 +77,12 @@ struct ContentView: View {
                 var collisions = self.food.filter{ $0.collide(to: self.player) }
                 self.food.removeAll(where: {collisions.contains($0)})
                 self.food.append(contentsOf: collisions.map({ _ in Item.spawn(within: geometry)}))
+                self.score += collisions.count
                 
                 collisions = self.bomb.filter{ $0.collide(to: self.player) }
                 self.bomb.removeAll(where: {collisions.contains($0)})
                 self.bomb.append(contentsOf: collisions.map({ _ in Item.spawn(within: geometry)}))
+                self.score -= collisions.count * 10
                 
             })
             .onAppear{
