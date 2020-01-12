@@ -17,7 +17,7 @@ By [v-braun - viktor-braun.de](https://viktor-braun.de).
 
 
 ## Description
-This repository is the home 🏠 of **catcher**, a iPhone game built with SwiftUI. 
+This repository is the home 🏠 of **catcher**, an iPhone game built with SwiftUI. 
 
 Checkout the creation process at [youtube](https://youtu.be/E-iOBThxIAk)
 
